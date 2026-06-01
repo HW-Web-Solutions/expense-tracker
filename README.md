@@ -98,7 +98,7 @@ Recommended MVP stack:
 - **Auth**: Supabase Auth
 - **Database**: Supabase Postgres
 - **Receipt image storage**: Supabase Storage
-- **AI receipt extraction**: OpenAI Vision-capable model using the Responses API with structured JSON output
+- **AI receipt extraction**: Gemini Vision-capable model first, with OpenAI as a fallback provider
 - **Deployment**: Vercel
 
 This gives us one full-stack web codebase first. A native mobile app can come later through Expo/React Native or a PWA wrapper if the MVP proves useful.
@@ -146,6 +146,8 @@ expense_time        time nullable
 notes               text nullable
 receipt_image_path  text nullable
 source              text -- scan or manual
+ai_provider         text nullable -- gemini, openai, mock, etc.
+ai_model            text nullable
 ai_confidence       numeric nullable
 raw_ai_result       jsonb nullable
 created_at          timestamptz
@@ -155,6 +157,29 @@ updated_at          timestamptz
 ## AI receipt extraction
 
 The app will send the uploaded receipt image to an AI model and ask for structured JSON.
+
+The MVP provider strategy is:
+
+1. **Default provider**: Gemini API, because it offers a low-friction way to test vision-based receipt extraction and may allow free/low-cost MVP testing.
+2. **Fallback provider**: OpenAI vision-capable model, if Gemini is not accurate enough for Chinese or mixed-language receipts.
+3. **Provider abstraction**: the app should not hard-code one AI provider into the UI or database flow.
+
+Suggested internal interface:
+
+```text
+ReceiptExtractor
+├── GeminiReceiptExtractor     // MVP default
+├── OpenAIReceiptExtractor     // fallback / comparison testing
+└── MockReceiptExtractor       // local/dev testing without API calls
+```
+
+Suggested environment variables:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_key
+OPENAI_API_KEY=your_openai_key_optional
+```
 
 Expected output shape:
 
@@ -207,8 +232,9 @@ Receipts may contain sensitive personal information. The MVP should follow these
 - Keep receipt files private by default.
 - Use row-level security in Supabase.
 - Do not expose receipt URLs publicly unless using signed URLs.
-- Store API keys only on the server.
-- Never send OpenAI API keys to the browser.
+- Store AI provider API keys only on the server.
+- Never send Gemini or OpenAI API keys to the browser.
+- Make it clear that receipt images may be sent to a third-party AI provider for extraction.
 
 ## Possible product names
 
