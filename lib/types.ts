@@ -17,6 +17,9 @@ export type Expense = {
   updated_at: string
 }
 
+export type ExpenseInsert = Omit<Expense, 'id' | 'created_at' | 'updated_at'>
+export type ExpenseUpdate = Partial<Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+
 export type ExtractedReceipt = {
   merchant: string
   expense_date: string
@@ -26,4 +29,16 @@ export type ExtractedReceipt = {
   confidence: number
   needs_review: boolean
   notes: string | null
+}
+
+export type Database = {
+  public: {
+    Tables: {
+      expenses: {
+        Row: Expense
+        Insert: ExpenseInsert & { id?: string; created_at?: string; updated_at?: string }
+        Update: ExpenseUpdate
+      }
+    }
+  }
 }
