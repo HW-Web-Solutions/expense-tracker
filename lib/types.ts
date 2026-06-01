@@ -17,7 +17,7 @@ export type Expense = {
   updated_at: string
 }
 
-export type ExpenseInsert = Omit<Expense, 'id' | 'created_at' | 'updated_at'>
+export type ExpenseInsert = Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type ExpenseUpdate = Partial<Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 
 export type ExtractedReceipt = {
