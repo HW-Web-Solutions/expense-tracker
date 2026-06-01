@@ -98,7 +98,8 @@ Recommended MVP stack:
 - **Auth**: Supabase Auth
 - **Database**: Supabase Postgres
 - **Receipt image storage**: Supabase Storage
-- **AI receipt extraction**: Gemini Vision-capable model first, with OpenAI as a fallback provider
+- **AI receipt extraction**: Google Gemini API first, with OpenAI as an optional fallback provider
+- **Default MVP AI model**: `gemini-2.5-flash-lite`
 - **Deployment**: Vercel
 
 This gives us one full-stack web codebase first. A native mobile app can come later through Expo/React Native or a PWA wrapper if the MVP proves useful.
@@ -160,9 +161,11 @@ The app will send the uploaded receipt image to an AI model and ask for structur
 
 The MVP provider strategy is:
 
-1. **Default provider**: Gemini API, because it offers a low-friction way to test vision-based receipt extraction and may allow free/low-cost MVP testing.
-2. **Fallback provider**: OpenAI vision-capable model, if Gemini is not accurate enough for Chinese or mixed-language receipts.
-3. **Provider abstraction**: the app should not hard-code one AI provider into the UI or database flow.
+1. **Default provider**: Google Gemini API.
+2. **Default model**: `gemini-2.5-flash-lite`, because it is the lowest-cost practical Gemini option for MVP testing and supports vision-based extraction.
+3. **Quality upgrade option**: `gemini-2.5-flash`, if Flash-Lite is not accurate enough for Chinese or mixed-language receipts.
+4. **Fallback provider**: OpenAI vision-capable model, if Gemini is not accurate enough after testing.
+5. **Provider abstraction**: the app should not hard-code one AI provider into the UI or database flow.
 
 Suggested internal interface:
 
@@ -177,6 +180,7 @@ Suggested environment variables:
 
 ```env
 AI_PROVIDER=gemini
+GEMINI_MODEL=gemini-2.5-flash-lite
 GEMINI_API_KEY=your_gemini_key
 OPENAI_API_KEY=your_openai_key_optional
 ```
@@ -235,6 +239,7 @@ Receipts may contain sensitive personal information. The MVP should follow these
 - Store AI provider API keys only on the server.
 - Never send Gemini or OpenAI API keys to the browser.
 - Make it clear that receipt images may be sent to a third-party AI provider for extraction.
+- Use Gemini Free Tier only for development/testing. For real user data, use a paid tier and include a privacy notice.
 
 ## Possible product names
 
