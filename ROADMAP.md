@@ -93,6 +93,8 @@ expense_time        time nullable
 notes               text nullable
 receipt_image_path  text nullable
 source              text -- scan or manual
+ai_provider         text nullable -- gemini, openai, mock, etc.
+ai_model            text nullable
 ai_confidence       numeric nullable
 raw_ai_result       jsonb nullable
 created_at          timestamptz
@@ -175,13 +177,17 @@ Definition of done:
 
 ## Phase 7: AI receipt extraction
 
-Goal: Use AI to fill the expense form from a receipt image.
+Goal: Use Google Gemini to fill the expense form from a receipt image.
 
 Tasks:
 
 - Create server-side receipt extraction endpoint.
-- Send receipt image to OpenAI vision-capable model.
-- Ask for structured JSON output.
+- Add a provider-based receipt extraction interface.
+- Use Google Gemini as the default AI provider.
+- Start with `gemini-2.5-flash-lite` for MVP testing.
+- Keep `gemini-2.5-flash` as a quality upgrade option.
+- Keep OpenAI as an optional fallback provider for comparison testing.
+- Ask the model for structured JSON output.
 - Extract:
   - merchant
   - expense date
@@ -193,14 +199,15 @@ Tasks:
 - Support English and Chinese receipts.
 - Show extracted result in review form.
 - Require user confirmation before saving.
-- Store `raw_ai_result` for debugging and improvement.
+- Store `ai_provider`, `ai_model`, and `raw_ai_result` for debugging and improvement.
 
 Definition of done:
 
 - User can scan/upload a receipt.
-- AI fills the form.
+- Gemini fills the form with extracted fields.
 - User can edit the result.
 - User can save the confirmed expense.
+- The code can support a different AI provider later without changing the UI flow.
 
 ## Phase 8: Expense detail page
 
@@ -255,6 +262,8 @@ Tasks:
 - Test no-receipt manual entry.
 - Test mobile camera upload.
 - Test desktop upload.
+- Test Gemini Flash-Lite extraction quality.
+- Compare Gemini Flash if Flash-Lite is not accurate enough.
 - Add loading states.
 - Add error states.
 - Add basic privacy copy.
@@ -265,6 +274,7 @@ Definition of done:
 - A non-technical user can complete the main flow without help.
 - Scan-to-saved-expense flow feels clear.
 - Manual expense flow feels faster than opening a spreadsheet.
+- The app has a clear AI provider strategy for MVP testing.
 
 ## Future ideas after MVP
 
@@ -281,6 +291,8 @@ Only consider these after the simple product is working:
 - Shared household expenses.
 - Batch receipt upload.
 - Better duplicate detection.
+- OpenAI fallback benchmarking.
+- AWS provider research.
 
 ## Features to avoid for now
 
