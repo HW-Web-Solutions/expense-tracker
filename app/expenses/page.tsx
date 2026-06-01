@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { getExpenses } from '@/lib/db/expenses'
 
-export default function ExpensesPage() {
+export default async function ExpensesPage() {
+  const expenses = await getExpenses()
+
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Expenses</h1>
         <button
@@ -15,7 +17,6 @@ export default function ExpensesPage() {
         </button>
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-3 mb-8">
         <Link
           href="/scan"
@@ -31,17 +32,15 @@ export default function ExpensesPage() {
         </Link>
       </div>
 
-      {/* Empty state */}
-      <div className="text-center py-16 px-6 border-2 border-dashed border-slate-200 rounded-xl">
-        <div className="text-4xl mb-3">📋</div>
-        <p className="text-slate-600 font-medium">No expenses yet.</p>
-        <p className="text-slate-400 text-sm mt-1">
-          Scan a receipt or add manually to get started.
-        </p>
-      </div>
-
-      {/* Table skeleton — shown when there are expenses */}
-      <div className="mt-8 hidden">
+      {expenses.length === 0 ? (
+        <div className="text-center py-16 px-6 border-2 border-dashed border-slate-200 rounded-xl">
+          <div className="text-4xl mb-3">📋</div>
+          <p className="text-slate-600 font-medium">No expenses yet.</p>
+          <p className="text-slate-400 text-sm mt-1">
+            Scan a receipt or add manually to get started.
+          </p>
+        </div>
+      ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -54,12 +53,50 @@ export default function ExpensesPage() {
                 <th className="text-left px-4 py-3 text-slate-600 font-medium">Notes</th>
               </tr>
             </thead>
-            <tbody>
-              {/* Rows will go here */}
+            <tbody className="divide-y divide-slate-100">
+              {expenses.map((expense) => (
+                <tr
+                  key={expense.id}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
+                    <Link href={`/expenses/${expense.id}`} className="block">
+                      {expense.expense_date}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-slate-900 font-medium">
+                    <Link href={`/expenses/${expense.id}`} className="block">
+                      {expense.merchant}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-slate-900 text-right tabular-nums">
+                    <Link href={`/expenses/${expense.id}`} className="block">
+                      {expense.amount.toFixed(2)}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">
+                    <Link href={`/expenses/${expense.id}`} className="block">
+                      {expense.currency}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {expense.receipt_image_path ? (
+                      <span className="text-blue-600">📎</span>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate">
+                    <Link href={`/expenses/${expense.id}`} className="block">
+                      {expense.notes ?? ''}
+                    </Link>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
     </div>
   )
 }
