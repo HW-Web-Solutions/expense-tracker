@@ -8,7 +8,7 @@ export class GeminiReceiptExtractor implements ReceiptExtractor {
   private client: GoogleGenAI
 
   constructor() {
-    this.model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite-preview-06-17'
+    this.model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
     this.client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
   }
 

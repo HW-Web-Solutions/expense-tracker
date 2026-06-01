@@ -17,7 +17,13 @@ export async function POST(req: Request) {
   const base64 = Buffer.from(bytes).toString('base64')
 
   const extractor = getReceiptExtractor()
-  const result = await extractor.extract(base64, file.type || 'image/jpeg')
+  let result
+  try {
+    result = await extractor.extract(base64, file.type || 'image/jpeg')
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'AI extraction failed'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 
   return NextResponse.json({
     ...result,
