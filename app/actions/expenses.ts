@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createExpense } from '@/lib/db/expenses'
 
-export async function createExpenseAction(formData: FormData) {
+export async function createExpenseAction(
+  _state: { error: string } | undefined,
+  formData: FormData
+) {
   const merchant = (formData.get('merchant') as string).trim()
   const amount = parseFloat(formData.get('amount') as string)
   const currency = formData.get('currency') as string
