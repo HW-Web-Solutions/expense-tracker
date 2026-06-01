@@ -16,10 +16,14 @@ export async function POST(req: Request) {
   const bytes = await file.arrayBuffer()
   const base64 = Buffer.from(bytes).toString('base64')
 
+  // Gemini only supports jpeg, png, gif, webp — normalize HEIC/unknown to jpeg
+  const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  const mimeType = supportedTypes.includes(file.type) ? file.type : 'image/jpeg'
+
   const extractor = getReceiptExtractor()
   let result
   try {
-    result = await extractor.extract(base64, file.type || 'image/jpeg')
+    result = await extractor.extract(base64, mimeType)
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'AI extraction failed'
     return NextResponse.json({ error: msg }, { status: 500 })
