@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { signOut } from '@/app/actions/auth'
 import './globals.css'
 
 const inter = Inter({
@@ -19,15 +21,17 @@ export const viewport: Viewport = {
   maximumScale: 1,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-white text-slate-900 antialiased">
-        {/* Desktop sidebar layout */}
         <div className="flex min-h-screen">
           {/* Sidebar — hidden on mobile */}
           <aside className="hidden md:flex md:w-56 md:flex-col md:fixed md:inset-y-0 border-r border-slate-200 bg-slate-50">
@@ -40,6 +44,25 @@ export default function RootLayout({
               <NavLink href="/expenses" label="Expenses" icon="📋" />
               <NavLink href="/scan" label="Scan Receipt" icon="📷" accent />
               <NavLink href="/expenses/new" label="Manual Entry" icon="✏️" />
+
+              <div className="mt-auto pt-4 border-t border-slate-200">
+                {user ? (
+                  <>
+                    <p className="px-3 py-1 text-xs text-slate-500 truncate">{user.email}</p>
+                    <form action={signOut}>
+                      <button
+                        type="submit"
+                        className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                      >
+                        <span>🚪</span>
+                        <span>Sign Out</span>
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <NavLink href="/login" label="Sign In" icon="👤" />
+                )}
+              </div>
             </div>
           </aside>
 
@@ -55,7 +78,11 @@ export default function RootLayout({
             <BottomNavLink href="/" label="Home" icon="🏠" />
             <BottomNavLink href="/expenses" label="Expenses" icon="📋" />
             <BottomNavScanButton />
-            <BottomNavLink href="/login" label="Profile" icon="👤" />
+            {user ? (
+              <BottomNavSignOut />
+            ) : (
+              <BottomNavLink href="/login" label="Sign In" icon="👤" />
+            )}
           </div>
         </nav>
       </body>
@@ -117,5 +144,16 @@ function BottomNavScanButton() {
       </span>
       <span className="text-[10px] text-slate-600">Scan</span>
     </Link>
+  )
+}
+
+function BottomNavSignOut() {
+  return (
+    <form action={signOut}>
+      <button type="submit" className="flex flex-col items-center gap-0.5 px-3 py-1 text-slate-600">
+        <span className="text-xl">🚪</span>
+        <span className="text-[10px]">Sign Out</span>
+      </button>
+    </form>
   )
 }
