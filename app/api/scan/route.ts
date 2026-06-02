@@ -6,16 +6,20 @@ import { logError, logInfo } from '@/lib/logger'
 
 const SCAN_DAILY_LIMIT = parseInt(process.env.SCAN_DAILY_LIMIT ?? '20', 10)
 
-async function getScanCountToday(userId: string): Promise<number> {
+async function getScanAttemptsToday(userId: string): Promise<number> {
   const supabase = await createClient()
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   const { count } = await supabase
-    .from('expenses')
+    .from('scan_events')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('source', 'scan')
     .gte('created_at', since)
   return count ?? 0
+}
+
+async function insertScanEvent(userId: string, provider: string, model: string, status: string) {
+  const supabase = await createClient()
+  await supabase.from('scan_events').insert({ user_id: userId, provider, model, status }).throwOnError()
 }
 
 export async function POST(req: Request) {
@@ -32,12 +36,12 @@ export async function POST(req: Request) {
   const fileError = validateReceiptFile(file)
   if (fileError) return NextResponse.json({ error: fileError }, { status: 400 })
 
-  // Rate limit: count saved scans in last 24 hours as a proxy for API usage
+  // Rate limit: count actual scan attempts in last 24 hours
   try {
-    const todayCount = await getScanCountToday(user.id)
+    const todayCount = await getScanAttemptsToday(user.id)
     if (todayCount >= SCAN_DAILY_LIMIT) {
       return NextResponse.json(
-        { error: `Daily scan limit reached (${SCAN_DAILY_LIMIT} scans per day). Please try again tomorrow.` },
+        { error: `Daily scan limit reached (${SCAN_DAILY_LIMIT} per day). Please try again tomorrow.` },
         { status: 429 },
       )
     }
@@ -48,18 +52,29 @@ export async function POST(req: Request) {
   const bytes = await file.arrayBuffer()
   const base64 = Buffer.from(bytes).toString('base64')
 
+  const extractor = getReceiptExtractor()
   logInfo('scan.start', { userId: user.id, fileType: file.type, fileSize: file.size })
 
-  const extractor = getReceiptExtractor()
+  // Record the attempt before calling Gemini
+  try {
+    await insertScanEvent(user.id, extractor.provider, extractor.model, 'attempted')
+  } catch {
+    // Non-fatal
+  }
+
   let result
   try {
     result = await extractor.extract(base64, file.type)
   } catch (e) {
-    logError('scan.extract', e, { userId: user.id, fileType: file.type, fileSize: file.size, aiProvider: extractor.provider, aiModel: extractor.model })
+    logError('scan.extract', e, { userId: user.id, fileType: file.type, aiProvider: extractor.provider, aiModel: extractor.model })
+    // Update status to error (best-effort)
+    insertScanEvent(user.id, extractor.provider, extractor.model, 'error').catch(() => {})
     const msg = e instanceof Error ? e.message : 'AI extraction failed'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 
+  // Update status to success (best-effort)
+  insertScanEvent(user.id, extractor.provider, extractor.model, 'success').catch(() => {})
   logInfo('scan.success', { userId: user.id, confidence: result.confidence, needsReview: result.needs_review })
 
   return NextResponse.json({

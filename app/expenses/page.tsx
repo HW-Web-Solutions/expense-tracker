@@ -12,20 +12,27 @@ export default async function ExpensesPage({
   const params = await searchParams
   const str = (v: unknown) => (typeof v === 'string' ? v : undefined)
 
-  const expenses = await getExpenses({
+  const filters = {
     search: str(params.search),
     month: str(params.month),
     source: str(params.source),
     receipt: str(params.receipt),
     currency: str(params.currency),
-  })
+  }
+
+  const expenses = await getExpenses(filters)
+
+  // Build export URL with active filters
+  const exportParams = new URLSearchParams()
+  Object.entries(filters).forEach(([k, v]) => { if (v) exportParams.set(k, v) })
+  const exportHref = `/api/expenses/export${exportParams.size ? `?${exportParams}` : ''}`
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-bold text-slate-900">Expenses</h1>
         <a
-          href="/api/expenses/export"
+          href={exportHref}
           className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
         >
           Export CSV

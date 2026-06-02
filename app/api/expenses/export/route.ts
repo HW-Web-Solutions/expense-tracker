@@ -1,12 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { getExpenses } from '@/lib/db/expenses'
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const expenses = await getExpenses()
+  const { searchParams } = new URL(req.url)
+  const str = (k: string) => searchParams.get(k) ?? undefined
+
+  const expenses = await getExpenses({
+    search: str('search'),
+    month: str('month'),
+    source: str('source'),
+    receipt: str('receipt'),
+    currency: str('currency'),
+  })
 
   const headers = ['date', 'time', 'merchant', 'amount', 'currency', 'notes', 'source', 'receipt_image_path']
   const rows = expenses.map(e => [

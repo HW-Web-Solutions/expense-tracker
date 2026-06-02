@@ -22,9 +22,13 @@ export async function getExpenses(filters: ExpenseFilters = {}): Promise<Expense
     query = query.or(`merchant.ilike.${term},notes.ilike.${term}`)
   }
   if (filters.month) {
+    const [y, m] = filters.month.split('-').map(Number)
+    const nextMonth = m === 12
+      ? `${y + 1}-01`
+      : `${y}-${String(m + 1).padStart(2, '0')}`
     query = query
       .gte('expense_date', `${filters.month}-01`)
-      .lte('expense_date', `${filters.month}-31`)
+      .lt('expense_date', `${nextMonth}-01`)
   }
   if (filters.source && filters.source !== 'all') {
     query = query.eq('source', filters.source)
