@@ -32,6 +32,14 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-white text-slate-900 antialiased">
+        {/* Private beta banner */}
+        <div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-800">
+          Private beta — please review AI results before saving.{' '}
+          <a href="mailto:hwwebsolutions@gmail.com?subject=Expense+Sheet+Feedback" className="font-medium underline hover:text-amber-900">
+            Send feedback
+          </a>
+        </div>
+
         <div className="flex min-h-screen">
           {/* Sidebar — hidden on mobile */}
           <aside className="hidden md:flex md:w-56 md:flex-col md:fixed md:inset-y-0 border-r border-slate-200 bg-slate-50">
@@ -44,6 +52,13 @@ export default async function RootLayout({
               <NavLink href="/expenses" label="Expenses" icon="📋" />
               <NavLink href="/scan" label="Scan Receipt" icon="📷" accent />
               <NavLink href="/expenses/new" label="Manual Entry" icon="✏️" />
+              <NavLink href="/privacy" label="Privacy" icon="🔒" />
+              <a
+                href="mailto:hwwebsolutions@gmail.com?subject=Expense+Sheet+Feedback"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <span>💬</span><span>Feedback</span>
+              </a>
 
               <div className="mt-auto pt-4 border-t border-slate-200">
                 {user ? (

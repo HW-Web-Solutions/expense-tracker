@@ -69,6 +69,12 @@ export default function ScanPage() {
           <h1 className="text-2xl font-bold text-slate-900">Scan Receipt</h1>
         </div>
 
+        <div className="mb-4 px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-500">
+          📄 Receipt images are sent to Google Gemini for AI extraction and stored in Supabase.
+          Avoid uploading receipts with card numbers or highly sensitive info.{' '}
+          <a href="/privacy" className="underline hover:text-slate-700">Privacy info</a>
+        </div>
+
         <label className="flex flex-col items-center justify-center w-full min-h-64 border-2 border-dashed border-blue-200 rounded-2xl bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors">
           <div className="text-5xl mb-4">📷</div>
           <p className="text-slate-700 font-semibold">Take a Photo</p>

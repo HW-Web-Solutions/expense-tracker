@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { validateExpenseInput } from '@/lib/validation/expenses'
 import { validateReceiptFile } from '@/lib/validation/receipts'
 import { createExpenseWithReceipt } from '@/lib/services/expenses'
+import { logError } from '@/lib/logger'
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
     )
     return NextResponse.json({ id: expense.id })
   } catch (e) {
+    logError('expenses.create', e, { userId: user.id, source })
     const msg = e instanceof Error ? e.message : 'Failed to save expense'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
