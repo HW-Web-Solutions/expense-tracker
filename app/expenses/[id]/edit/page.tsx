@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { updateExpenseAction } from '@/app/actions/expenses'
 import { ReceiptUpload } from '@/app/components/ReceiptUpload'
+import { Spinner } from '@/app/components/Spinner'
 import type { Expense } from '@/lib/types'
 
 const CURRENCIES = ['CAD', 'USD', 'CNY', 'HKD', 'EUR', 'GBP']
@@ -26,7 +27,10 @@ export default function EditExpensePage() {
   if (!expense) {
     return (
       <div className="px-4 py-6 max-w-lg mx-auto">
-        <div className="text-center py-12 text-slate-400 text-sm">Loading…</div>
+        <div className="flex items-center justify-center py-20 gap-2 text-slate-400">
+        <Spinner className="w-5 h-5" />
+        <span className="text-sm">Loading…</span>
+      </div>
       </div>
     )
   }
@@ -143,7 +147,7 @@ export default function EditExpensePage() {
           disabled={pending}
           className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors"
         >
-          {pending ? 'Saving…' : 'Save Changes'}
+          {pending ? <><Spinner className="w-4 h-4 inline mr-1.5" />Saving…</> : 'Save Changes'}
         </button>
       </form>
     </div>
