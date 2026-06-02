@@ -10,27 +10,58 @@ import type { Expense } from '@/lib/types'
 
 const CURRENCIES = ['CAD', 'USD', 'CNY', 'HKD', 'EUR', 'GBP']
 
+type LoadState = 'loading' | 'error' | 'notfound' | 'ready'
+
 export default function EditExpensePage() {
   const params = useParams()
   const id = params.id as string
   const [expense, setExpense] = useState<Expense | null>(null)
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
+  const [loadState, setLoadState] = useState<LoadState>('loading')
   const [state, action, pending] = useActionState(updateExpenseAction, undefined)
 
   useEffect(() => {
-    fetch(`/api/expenses/${id}`).then(r => r.json()).then(data => {
-      setExpense(data.expense)
-      setReceiptUrl(data.receiptUrl ?? null)
-    })
+    setLoadState('loading')
+    fetch(`/api/expenses/${id}`)
+      .then(async r => {
+        if (r.status === 404) { setLoadState('notfound'); return }
+        if (r.status === 401) { setLoadState('error'); return }
+        if (!r.ok) { setLoadState('error'); return }
+        const data = await r.json()
+        setExpense(data.expense)
+        setReceiptUrl(data.receiptUrl ?? null)
+        setLoadState('ready')
+      })
+      .catch(() => setLoadState('error'))
   }, [id])
 
-  if (!expense) {
+  if (loadState === 'loading') {
     return (
       <div className="px-4 py-6 max-w-lg mx-auto">
         <div className="flex items-center justify-center py-20 gap-2 text-slate-400">
-        <Spinner className="w-5 h-5" />
-        <span className="text-sm">Loading…</span>
+          <Spinner className="w-5 h-5" />
+          <span className="text-sm">Loading…</span>
+        </div>
       </div>
+    )
+  }
+
+  if (loadState === 'notfound') {
+    return (
+      <div className="px-4 py-6 max-w-lg mx-auto">
+        <Link href="/expenses" className="text-slate-500 hover:text-slate-700 transition-colors">← Back</Link>
+        <div className="mt-6 text-center py-12 text-slate-500 text-sm">Expense not found.</div>
+      </div>
+    )
+  }
+
+  if (loadState === 'error' || !expense) {
+    return (
+      <div className="px-4 py-6 max-w-lg mx-auto">
+        <Link href="/expenses" className="text-slate-500 hover:text-slate-700 transition-colors">← Back</Link>
+        <div className="mt-6 rounded-xl bg-red-50 border border-red-200 px-4 py-4 text-red-700 text-sm">
+          Failed to load expense. Please go back and try again.
+        </div>
       </div>
     )
   }
@@ -67,7 +98,7 @@ export default function EditExpensePage() {
         </div>
 
         <div className="flex gap-3">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Amount <span className="text-red-500">*</span>
             </label>
@@ -81,7 +112,7 @@ export default function EditExpensePage() {
               className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="w-32">
+          <div className="w-28 shrink-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Currency <span className="text-red-500">*</span>
             </label>
@@ -97,8 +128,9 @@ export default function EditExpensePage() {
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <div className="flex-1">
+        {/* Date + Time: stack on mobile, side by side on sm+ */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Date <span className="text-red-500">*</span>
             </label>
@@ -110,7 +142,7 @@ export default function EditExpensePage() {
               className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Time <span className="text-slate-400 font-normal">(optional)</span>
             </label>
@@ -145,9 +177,9 @@ export default function EditExpensePage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors"
+          className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors flex items-center justify-center gap-2"
         >
-          {pending ? <><Spinner className="w-4 h-4 inline mr-1.5" />Saving…</> : 'Save Changes'}
+          {pending ? <><Spinner className="w-4 h-4" />Saving…</> : 'Save Changes'}
         </button>
       </form>
     </div>

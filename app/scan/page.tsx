@@ -229,16 +229,16 @@ export default function ScanPage() {
 
         {/* Date + Time: stack on mobile, side by side on sm+ */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Date <span className="text-red-500">*</span></label>
             <input type="date" name="expense_date" defaultValue={r.expense_date ?? ''} required
-              className={`w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${missingDate ? warn : normal}`} />
+              className={`w-full max-w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${missingDate ? warn : normal}`} />
             {missingDate && <p className="mt-1 text-xs text-amber-600">Date not found on receipt — please enter.</p>}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Time <span className="text-slate-400 font-normal">(optional)</span></label>
             <input type="time" name="expense_time" defaultValue={r.expense_time ?? ''}
-              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full max-w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
         </div>
 
