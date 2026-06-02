@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 import type { ReceiptExtractor, ExtractedReceipt } from './types'
 import { EXTRACTION_PROMPT } from './prompt'
+import { validateExtractedReceipt } from './validate'
 
 export class GeminiReceiptExtractor implements ReceiptExtractor {
   readonly provider = 'gemini'
@@ -29,10 +30,12 @@ export class GeminiReceiptExtractor implements ReceiptExtractor {
     const text = (response.text ?? '').trim()
     const json = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
 
+    let parsed: unknown
     try {
-      return JSON.parse(json) as ExtractedReceipt
+      parsed = JSON.parse(json)
     } catch {
       throw new Error(`Gemini returned invalid JSON: ${text.slice(0, 200)}`)
     }
+    return validateExtractedReceipt(parsed)
   }
 }
