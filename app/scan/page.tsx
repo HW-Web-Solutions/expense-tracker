@@ -13,9 +13,8 @@ type ReviewData = ExtractedReceipt & { ai_provider: string; ai_model: string; ra
 type State =
   | { step: 'upload' }
   | { step: 'extracting'; previewUrl: string }
-  | { step: 'review'; previewUrl: string; result: ReviewData }
+  | { step: 'review'; previewUrl: string; result: ReviewData; saveError?: string }
   | { step: 'saving'; previewUrl: string; result: ReviewData }
-  | { step: 'success'; savedId: string }
   | { step: 'error'; message: string }
 
 export default function ScanPage() {
@@ -45,21 +44,31 @@ export default function ScanPage() {
     if (state.step !== 'review') return
 
     const { previewUrl, result } = state
-    setState({ step: 'saving', previewUrl, result })
-
     const form = e.currentTarget
     const fd = new FormData(form)
+
+    // Capture user-edited values so we can restore them if save fails
+    const editedResult: ReviewData = {
+      ...result,
+      merchant: (fd.get('merchant') as string) || result.merchant,
+      amount: parseFloat(fd.get('amount') as string) || result.amount,
+      currency: (fd.get('currency') as string) || result.currency,
+      expense_date: (fd.get('expense_date') as string) || result.expense_date,
+      expense_time: (fd.get('expense_time') as string) || result.expense_time,
+      notes: (fd.get('notes') as string) || result.notes,
+    }
+
+    setState({ step: 'saving', previewUrl, result: editedResult })
 
     const blob = await fetch(previewUrl).then(r => r.blob())
     fd.append('receipt', blob, 'receipt.jpg')
 
     const res = await fetch('/api/expenses', { method: 'POST', body: fd })
     if (res.ok) {
-      const { id } = await res.json()
-      setState({ step: 'success', savedId: id })
+      router.push('/expenses?success=saved')
     } else {
       const { error } = await res.json()
-      setState({ step: 'error', message: error ?? 'Failed to save' })
+      setState({ step: 'review', previewUrl, result: editedResult, saveError: error ?? 'Failed to save' })
     }
   }
 
@@ -152,41 +161,10 @@ export default function ScanPage() {
     )
   }
 
-  if (state.step === 'success') {
-    return (
-      <div className="px-4 py-6 max-w-lg mx-auto">
-        <div className="flex flex-col items-center py-12 gap-4">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">✓</div>
-          <h1 className="text-2xl font-bold text-slate-900">Saved!</h1>
-          <p className="text-slate-500 text-sm text-center">Your expense has been saved successfully.</p>
-        </div>
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => router.push(`/expenses/${state.savedId}`)}
-            className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
-          >
-            View Expense
-          </button>
-          <Link
-            href="/expenses"
-            className="w-full h-12 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center"
-          >
-            Back to Expense List
-          </Link>
-          <button
-            onClick={() => setState({ step: 'upload' })}
-            className="w-full h-12 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
-          >
-            Scan Another Receipt
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   // review or saving
   const r = state.result
   const isSaving = state.step === 'saving'
+  const saveError = state.step === 'review' ? state.saveError : undefined
 
   const unknownMerchant = r.merchant === 'Unknown'
   const missingDate = !r.expense_date
@@ -204,6 +182,12 @@ export default function ScanPage() {
       {r.needs_review && (
         <div className="mb-4 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
           ⚠️ Some fields may be uncertain — please review before saving.
+        </div>
+      )}
+
+      {saveError && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+          {saveError}
         </div>
       )}
 
