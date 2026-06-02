@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getReceiptExtractor } from '@/lib/ai'
+import { validateReceiptFile } from '@/lib/validation/receipts'
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -13,17 +14,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No image provided' }, { status: 400 })
   }
 
+  const fileError = validateReceiptFile(file)
+  if (fileError) return NextResponse.json({ error: fileError }, { status: 400 })
+
   const bytes = await file.arrayBuffer()
   const base64 = Buffer.from(bytes).toString('base64')
-
-  // Gemini only supports jpeg, png, gif, webp — normalize HEIC/unknown to jpeg
-  const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-  const mimeType = supportedTypes.includes(file.type) ? file.type : 'image/jpeg'
 
   const extractor = getReceiptExtractor()
   let result
   try {
-    result = await extractor.extract(base64, mimeType)
+    result = await extractor.extract(base64, file.type)
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'AI extraction failed'
     return NextResponse.json({ error: msg }, { status: 500 })

@@ -1,6 +1,6 @@
 export type ExtractedReceipt = {
   merchant: string
-  expense_date: string
+  expense_date: string | null
   expense_time: string | null
   amount: number
   currency: string
