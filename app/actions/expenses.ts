@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createExpense, updateExpense } from '@/lib/db/expenses'
+import { createExpense, updateExpense, getExpense } from '@/lib/db/expenses'
 import { uploadReceipt, deleteReceipt } from '@/lib/db/receipts'
 import { createClient } from '@/lib/supabase/server'
 
@@ -84,13 +84,21 @@ export async function updateExpenseAction(
     return { error: 'Please fill in all required fields.' }
   }
 
+  const removeReceipt = formData.get('remove_receipt') === 'true'
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated.' }
 
-    let receipt_image_path: string | undefined = undefined
-    if (receiptFile && receiptFile.size > 0) {
+    const existing = await getExpense(id)
+    let receipt_image_path: string | null | undefined = undefined
+
+    if (removeReceipt) {
+      if (existing?.receipt_image_path) await deleteReceipt(existing.receipt_image_path)
+      receipt_image_path = null
+    } else if (receiptFile && receiptFile.size > 0) {
+      if (existing?.receipt_image_path) await deleteReceipt(existing.receipt_image_path)
       receipt_image_path = await uploadReceipt(receiptFile, user.id)
     }
 

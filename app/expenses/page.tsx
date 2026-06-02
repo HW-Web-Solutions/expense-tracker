@@ -8,13 +8,12 @@ export default async function ExpensesPage() {
     <div className="px-4 py-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Expenses</h1>
-        <button
-          disabled
-          className="text-sm text-slate-400 border border-slate-200 rounded-lg px-3 py-1.5 cursor-not-allowed"
-          title="Coming soon"
+        <a
+          href="/api/expenses/export"
+          className="text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
         >
           Export CSV
-        </button>
+        </a>
       </div>
 
       <div className="flex gap-3 mb-8">

@@ -6,25 +6,32 @@ import Image from 'next/image'
 interface ReceiptUploadProps {
   name: string
   defaultImageUrl?: string
+  removeFieldName?: string
 }
 
-export function ReceiptUpload({ name, defaultImageUrl }: ReceiptUploadProps) {
+export function ReceiptUpload({ name, defaultImageUrl, removeFieldName }: ReceiptUploadProps) {
   const [preview, setPreview] = useState<string | null>(defaultImageUrl ?? null)
+  const [removed, setRemoved] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setPreview(URL.createObjectURL(file))
+    setRemoved(false)
   }
 
   function handleRemove() {
     setPreview(null)
+    setRemoved(true)
     if (inputRef.current) inputRef.current.value = ''
   }
 
   return (
     <div>
+      {removeFieldName && removed && (
+        <input type="hidden" name={removeFieldName} value="true" />
+      )}
       {preview ? (
         <div className="relative rounded-lg overflow-hidden border border-slate-200">
           <Image
