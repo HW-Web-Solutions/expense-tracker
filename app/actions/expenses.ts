@@ -44,13 +44,15 @@ export async function createExpenseAction(
   }
 
   revalidatePath('/expenses')
-  redirect('/expenses')
+  redirect('/expenses?success=saved')
 }
 
 export async function deleteExpenseAction(id: string, receiptPath: string | null) {
   try {
-    if (receiptPath) await deleteReceipt(receiptPath)
     await deleteExpense(id)
+    if (receiptPath) {
+      deleteReceipt(receiptPath).catch(e => console.error('Receipt cleanup failed', e))
+    }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to delete expense.' }
   }

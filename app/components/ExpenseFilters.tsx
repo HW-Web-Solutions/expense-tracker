@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useCallback, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 
 const CURRENCIES = ['USD', 'CAD', 'CNY', 'HKD', 'EUR', 'GBP', 'JPY', 'AUD', 'SGD']
 
@@ -20,6 +20,8 @@ export default function ExpenseFilters() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const get = (key: string) => searchParams.get(key) ?? ''
 
@@ -38,7 +40,22 @@ export default function ExpenseFilters() {
     [router, pathname, searchParams],
   )
 
+  // Debounce search: update URL 400ms after the user stops typing
+  function handleSearchChange(value: string) {
+    setSearchInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => update('search', value), 400)
+  }
+
+  // Keep local search input in sync if URL changes externally (e.g. clear filters)
+  const urlSearch = searchParams.get('search') ?? ''
+  useEffect(() => {
+    setSearchInput(urlSearch)
+  }, [urlSearch])
+
   const clearAll = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setSearchInput('')
     startTransition(() => {
       router.replace(pathname)
     })
@@ -51,8 +68,8 @@ export default function ExpenseFilters() {
       <input
         type="search"
         placeholder="Search merchant or notes…"
-        defaultValue={get('search')}
-        onChange={e => update('search', e.target.value)}
+        value={searchInput}
+        onChange={e => handleSearchChange(e.target.value)}
         className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
