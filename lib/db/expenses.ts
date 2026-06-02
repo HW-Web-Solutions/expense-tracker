@@ -18,8 +18,12 @@ export async function getExpenses(filters: ExpenseFilters = {}): Promise<Expense
     .order('created_at', { ascending: false })
 
   if (filters.search) {
-    const term = `%${filters.search}%`
-    query = query.or(`merchant.ilike.${term},notes.ilike.${term}`)
+    const raw = filters.search.trim().slice(0, 100)
+    if (raw) {
+      // Escape SQL LIKE special characters before embedding in the ilike filter
+      const escaped = raw.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')
+      query = query.or(`merchant.ilike.%${escaped}%,notes.ilike.%${escaped}%`)
+    }
   }
   if (filters.month) {
     const [y, m] = filters.month.split('-').map(Number)

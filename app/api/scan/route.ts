@@ -17,9 +17,28 @@ async function getScanAttemptsToday(userId: string): Promise<number> {
   return count ?? 0
 }
 
-async function insertScanEvent(userId: string, provider: string, model: string, status: string) {
+async function createScanEvent(
+  userId: string,
+  provider: string,
+  model: string,
+  fileType: string,
+  fileSize: number,
+): Promise<string | null> {
   const supabase = await createClient()
-  await supabase.from('scan_events').insert({ user_id: userId, provider, model, status }).throwOnError()
+  const { data } = await supabase
+    .from('scan_events')
+    .insert({ user_id: userId, provider, model, status: 'attempted', file_type: fileType, file_size: fileSize })
+    .select('id')
+    .single()
+  return data?.id ?? null
+}
+
+async function updateScanEvent(id: string, status: 'success' | 'error', errorMessage?: string) {
+  const supabase = await createClient()
+  await supabase
+    .from('scan_events')
+    .update({ status, error_message: errorMessage ?? null, updated_at: new Date().toISOString() })
+    .eq('id', id)
 }
 
 export async function POST(req: Request) {
@@ -55,9 +74,10 @@ export async function POST(req: Request) {
   const extractor = getReceiptExtractor()
   logInfo('scan.start', { userId: user.id, fileType: file.type, fileSize: file.size })
 
-  // Record the attempt before calling Gemini
+  // Insert ONE event row before calling Gemini — update status afterward
+  let eventId: string | null = null
   try {
-    await insertScanEvent(user.id, extractor.provider, extractor.model, 'attempted')
+    eventId = await createScanEvent(user.id, extractor.provider, extractor.model, file.type, file.size)
   } catch {
     // Non-fatal
   }
@@ -67,14 +87,12 @@ export async function POST(req: Request) {
     result = await extractor.extract(base64, file.type)
   } catch (e) {
     logError('scan.extract', e, { userId: user.id, fileType: file.type, aiProvider: extractor.provider, aiModel: extractor.model })
-    // Update status to error (best-effort)
-    insertScanEvent(user.id, extractor.provider, extractor.model, 'error').catch(() => {})
     const msg = e instanceof Error ? e.message : 'AI extraction failed'
+    if (eventId) updateScanEvent(eventId, 'error', msg).catch(() => {})
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 
-  // Update status to success (best-effort)
-  insertScanEvent(user.id, extractor.provider, extractor.model, 'success').catch(() => {})
+  if (eventId) updateScanEvent(eventId, 'success').catch(() => {})
   logInfo('scan.success', { userId: user.id, confidence: result.confidence, needsReview: result.needs_review })
 
   return NextResponse.json({
