@@ -15,6 +15,7 @@ type State =
   | { step: 'extracting'; previewUrl: string }
   | { step: 'review'; previewUrl: string; result: ReviewData }
   | { step: 'saving'; previewUrl: string; result: ReviewData }
+  | { step: 'success'; savedId: string }
   | { step: 'error'; message: string }
 
 export default function ScanPage() {
@@ -55,7 +56,7 @@ export default function ScanPage() {
     const res = await fetch('/api/expenses', { method: 'POST', body: fd })
     if (res.ok) {
       const { id } = await res.json()
-      router.push(`/expenses/${id}`)
+      setState({ step: 'success', savedId: id })
     } else {
       const { error } = await res.json()
       setState({ step: 'error', message: error ?? 'Failed to save' })
@@ -119,7 +120,7 @@ export default function ScanPage() {
         </div>
         <div className="rounded-xl overflow-hidden border border-slate-200 mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-64" />
+          <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-40" />
         </div>
         <div className="flex flex-col items-center py-8 gap-3">
           <Spinner className="w-8 h-8 text-blue-500" />
@@ -151,6 +152,38 @@ export default function ScanPage() {
     )
   }
 
+  if (state.step === 'success') {
+    return (
+      <div className="px-4 py-6 max-w-lg mx-auto">
+        <div className="flex flex-col items-center py-12 gap-4">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">✓</div>
+          <h1 className="text-2xl font-bold text-slate-900">Saved!</h1>
+          <p className="text-slate-500 text-sm text-center">Your expense has been saved successfully.</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => router.push(`/expenses/${state.savedId}`)}
+            className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+          >
+            View Expense
+          </button>
+          <Link
+            href="/expenses"
+            className="w-full h-12 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center"
+          >
+            Back to Expense List
+          </Link>
+          <button
+            onClick={() => setState({ step: 'upload' })}
+            className="w-full h-12 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+          >
+            Scan Another Receipt
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // review or saving
   const r = state.result
   const isSaving = state.step === 'saving'
@@ -174,12 +207,13 @@ export default function ScanPage() {
         </div>
       )}
 
-      <div className="rounded-xl overflow-hidden border border-slate-200 mb-6">
+      {/* Compact receipt preview */}
+      <div className="rounded-xl overflow-hidden border border-slate-200 mb-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-48" />
+        <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-32" />
       </div>
 
-      <form onSubmit={handleSave} className="space-y-5 pb-24">
+      <form onSubmit={handleSave} className="space-y-4 pb-24">
         <input type="hidden" name="ai_provider" value={r.ai_provider} />
         <input type="hidden" name="ai_model" value={r.ai_model} />
         <input type="hidden" name="raw_ai_result" value={JSON.stringify(r.raw_ai_result)} />
@@ -192,6 +226,7 @@ export default function ScanPage() {
           {unknownMerchant && <p className="mt-1 text-xs text-amber-600">Merchant not detected — please enter.</p>}
         </div>
 
+        {/* Amount + Currency: always side by side */}
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Amount <span className="text-red-500">*</span></label>
@@ -199,7 +234,7 @@ export default function ScanPage() {
               className={`w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${zeroAmount ? warn : normal}`} />
             {zeroAmount && <p className="mt-1 text-xs text-amber-600">Please confirm the final paid amount.</p>}
           </div>
-          <div className="w-32">
+          <div className="w-28">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Currency <span className="text-red-500">*</span></label>
             <select name="currency" defaultValue={r.currency}
               className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -208,7 +243,8 @@ export default function ScanPage() {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        {/* Date + Time: stack on mobile, side by side on sm+ */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Date <span className="text-red-500">*</span></label>
             <input type="date" name="expense_date" defaultValue={r.expense_date ?? ''} required
@@ -233,8 +269,8 @@ export default function ScanPage() {
         {/* Sticky save button on mobile */}
         <div className="fixed bottom-0 inset-x-0 md:relative md:bottom-auto md:inset-x-auto bg-white border-t border-slate-200 md:border-0 px-4 py-3 md:p-0 z-40">
           <button type="submit" disabled={isSaving}
-            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors">
-            {isSaving ? <><Spinner className="w-4 h-4 inline mr-1.5" />Saving…</> : 'Save Expense'}
+            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors flex items-center justify-center gap-2">
+            {isSaving ? <><Spinner className="w-4 h-4" />Saving…</> : 'Save Expense'}
           </button>
         </div>
       </form>
