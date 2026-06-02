@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ExtractedReceipt } from '@/lib/ai/types'
+import { Spinner } from '@/app/components/Spinner'
 
 const CURRENCIES = ['CAD', 'USD', 'CNY', 'HKD', 'EUR', 'GBP']
 
@@ -121,7 +122,7 @@ export default function ScanPage() {
           <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-64" />
         </div>
         <div className="flex flex-col items-center py-8 gap-3">
-          <div className="text-3xl animate-pulse">🤖</div>
+          <Spinner className="w-8 h-8 text-blue-500" />
           <p className="text-slate-700 font-medium">Extracting receipt data…</p>
           <p className="text-slate-400 text-sm">This usually takes a few seconds</p>
         </div>
@@ -233,7 +234,7 @@ export default function ScanPage() {
         <div className="fixed bottom-0 inset-x-0 md:relative md:bottom-auto md:inset-x-auto bg-white border-t border-slate-200 md:border-0 px-4 py-3 md:p-0 z-40">
           <button type="submit" disabled={isSaving}
             className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors">
-            {isSaving ? 'Saving…' : 'Save Expense'}
+            {isSaving ? <><Spinner className="w-4 h-4 inline mr-1.5" />Saving…</> : 'Save Expense'}
           </button>
         </div>
       </form>

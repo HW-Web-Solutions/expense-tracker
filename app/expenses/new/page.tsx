@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState } from 'react'
 import { createExpenseAction } from '@/app/actions/expenses'
 import { ReceiptUpload } from '@/app/components/ReceiptUpload'
+import { Spinner } from '@/app/components/Spinner'
 
 const CURRENCIES = ['CAD', 'USD', 'CNY', 'HKD', 'EUR', 'GBP']
 const today = new Date().toISOString().split('T')[0]
@@ -120,7 +121,7 @@ export default function NewExpensePage() {
           disabled={pending}
           className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors"
         >
-          {pending ? 'Saving…' : 'Save Expense'}
+          {pending ? <><Spinner className="w-4 h-4 inline mr-1.5" />Saving…</> : 'Save Expense'}
         </button>
       </form>
     </div>
