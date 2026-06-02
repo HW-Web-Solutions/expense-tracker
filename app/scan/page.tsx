@@ -172,7 +172,7 @@ export default function ScanPage() {
         <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-48" />
       </div>
 
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="space-y-5 pb-24">
         <input type="hidden" name="ai_provider" value={r.ai_provider} />
         <input type="hidden" name="ai_model" value={r.ai_model} />
         <input type="hidden" name="raw_ai_result" value={JSON.stringify(r.raw_ai_result)} />
@@ -220,10 +220,13 @@ export default function ScanPage() {
 
         <p className="text-xs text-slate-400">AI confidence: {Math.round(r.confidence * 100)}% · {r.ai_provider} / {r.ai_model}</p>
 
-        <button type="submit" disabled={isSaving}
-          className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors">
-          {isSaving ? 'Saving…' : 'Save Expense'}
-        </button>
+        {/* Sticky save button on mobile */}
+        <div className="fixed bottom-0 inset-x-0 md:relative md:bottom-auto md:inset-x-auto bg-white border-t border-slate-200 md:border-0 px-4 py-3 md:p-0 z-40">
+          <button type="submit" disabled={isSaving}
+            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-base transition-colors">
+            {isSaving ? 'Saving…' : 'Save Expense'}
+          </button>
+        </div>
       </form>
     </div>
   )
