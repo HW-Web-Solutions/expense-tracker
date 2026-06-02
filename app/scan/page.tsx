@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { ExtractedReceipt } from '@/lib/ai/types'
 
@@ -74,7 +73,7 @@ export default function ScanPage() {
           <div className="text-5xl mb-4">📷</div>
           <p className="text-slate-700 font-semibold">Take a Photo</p>
           <p className="text-slate-500 text-sm mt-1">or upload an image</p>
-          <p className="mt-4 text-xs text-slate-400">Supports JPG, PNG, HEIC</p>
+          <p className="mt-4 text-xs text-slate-400">Supports JPG, PNG, WebP · max 10 MB</p>
           <input
             ref={inputRef}
             type="file"
@@ -89,7 +88,7 @@ export default function ScanPage() {
           <span>🖼️</span> Upload from Library
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
           />
@@ -112,7 +111,8 @@ export default function ScanPage() {
           <h1 className="text-2xl font-bold text-slate-900">Scan Receipt</h1>
         </div>
         <div className="rounded-xl overflow-hidden border border-slate-200 mb-6">
-          <Image src={state.previewUrl} alt="Receipt" width={600} height={400} className="w-full object-contain max-h-64" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-64" />
         </div>
         <div className="flex flex-col items-center py-8 gap-3">
           <div className="text-3xl animate-pulse">🤖</div>
@@ -162,7 +162,8 @@ export default function ScanPage() {
       )}
 
       <div className="rounded-xl overflow-hidden border border-slate-200 mb-6">
-        <Image src={state.previewUrl} alt="Receipt" width={600} height={400} className="w-full object-contain max-h-48" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={state.previewUrl} alt="Receipt" className="w-full object-contain max-h-48" />
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
@@ -195,7 +196,7 @@ export default function ScanPage() {
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Date <span className="text-red-500">*</span></label>
-            <input type="date" name="expense_date" defaultValue={r.expense_date} required
+            <input type="date" name="expense_date" defaultValue={r.expense_date ?? ''} required
               className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex-1">

@@ -38,7 +38,7 @@ export async function getExpenses(filters: ExpenseFilters = {}): Promise<Expense
     query = query.eq('currency', filters.currency)
   }
 
-  const { data, error } = await query
+  const { data, error } = await query.limit(200)
   if (error) throw error
   return data
 }

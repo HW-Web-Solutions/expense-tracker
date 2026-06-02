@@ -11,18 +11,23 @@ interface ReceiptUploadProps {
 
 export function ReceiptUpload({ name, defaultImageUrl, removeFieldName }: ReceiptUploadProps) {
   const [preview, setPreview] = useState<string | null>(defaultImageUrl ?? null)
+  const [isBlob, setIsBlob] = useState(false)
   const [removed, setRemoved] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (isBlob && preview) URL.revokeObjectURL(preview)
     setPreview(URL.createObjectURL(file))
+    setIsBlob(true)
     setRemoved(false)
   }
 
   function handleRemove() {
+    if (isBlob && preview) URL.revokeObjectURL(preview)
     setPreview(null)
+    setIsBlob(false)
     setRemoved(true)
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -34,13 +39,22 @@ export function ReceiptUpload({ name, defaultImageUrl, removeFieldName }: Receip
       )}
       {preview ? (
         <div className="relative rounded-lg overflow-hidden border border-slate-200">
-          <Image
-            src={preview}
-            alt="Receipt preview"
-            width={400}
-            height={300}
-            className="w-full object-contain max-h-64"
-          />
+          {isBlob ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={preview}
+              alt="Receipt preview"
+              className="w-full object-contain max-h-64"
+            />
+          ) : (
+            <Image
+              src={preview}
+              alt="Receipt preview"
+              width={400}
+              height={300}
+              className="w-full object-contain max-h-64"
+            />
+          )}
           <button
             type="button"
             onClick={handleRemove}
@@ -53,11 +67,12 @@ export function ReceiptUpload({ name, defaultImageUrl, removeFieldName }: Receip
         <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
           <span className="text-2xl">📎</span>
           <span className="mt-1 text-sm text-slate-400">Upload or take a photo</span>
+          <span className="mt-0.5 text-xs text-slate-300">JPG, PNG, WebP · max 10 MB</span>
           <input
             ref={inputRef}
             type="file"
             name={name}
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             capture="environment"
             onChange={handleChange}
             className="hidden"

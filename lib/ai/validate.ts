@@ -17,9 +17,8 @@ export function validateExtractedReceipt(raw: unknown): ExtractedReceipt {
     ? r.merchant.trim()
     : (() => { issues.push('merchant missing'); return 'Unknown' })()
 
-  // expense_date
-  const today = new Date().toISOString().split('T')[0]
-  let expense_date = today
+  // expense_date — null means not visible on receipt; user must fill it in
+  let expense_date: string | null = null
   if (typeof r.expense_date === 'string' && DATE_RE.test(r.expense_date)) {
     expense_date = r.expense_date
   } else {
