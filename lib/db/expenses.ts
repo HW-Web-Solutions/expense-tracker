@@ -1,14 +1,44 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Expense, ExpenseInsert, ExpenseUpdate } from '@/lib/types'
 
-export async function getExpenses(): Promise<Expense[]> {
+export interface ExpenseFilters {
+  search?: string
+  month?: string
+  source?: string
+  receipt?: string
+  currency?: string
+}
+
+export async function getExpenses(filters: ExpenseFilters = {}): Promise<Expense[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('expenses')
     .select('*')
     .order('expense_date', { ascending: false })
     .order('created_at', { ascending: false })
 
+  if (filters.search) {
+    const term = `%${filters.search}%`
+    query = query.or(`merchant.ilike.${term},notes.ilike.${term}`)
+  }
+  if (filters.month) {
+    query = query
+      .gte('expense_date', `${filters.month}-01`)
+      .lte('expense_date', `${filters.month}-31`)
+  }
+  if (filters.source && filters.source !== 'all') {
+    query = query.eq('source', filters.source)
+  }
+  if (filters.receipt === 'has') {
+    query = query.not('receipt_image_path', 'is', null)
+  } else if (filters.receipt === 'none') {
+    query = query.is('receipt_image_path', null)
+  }
+  if (filters.currency && filters.currency !== 'all') {
+    query = query.eq('currency', filters.currency)
+  }
+
+  const { data, error } = await query
   if (error) throw error
   return data
 }

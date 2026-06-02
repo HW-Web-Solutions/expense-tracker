@@ -1,8 +1,23 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { getExpenses } from '@/lib/db/expenses'
+import ExpenseFilters from '@/app/components/ExpenseFilters'
 
-export default async function ExpensesPage() {
-  const expenses = await getExpenses()
+export default async function ExpensesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await searchParams
+  const str = (v: unknown) => (typeof v === 'string' ? v : undefined)
+
+  const expenses = await getExpenses({
+    search: str(params.search),
+    month: str(params.month),
+    source: str(params.source),
+    receipt: str(params.receipt),
+    currency: str(params.currency),
+  })
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
@@ -16,7 +31,7 @@ export default async function ExpensesPage() {
         </a>
       </div>
 
-      <div className="flex gap-3 mb-8">
+      <div className="flex gap-3 mb-6">
         <Link
           href="/scan"
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -31,12 +46,16 @@ export default async function ExpensesPage() {
         </Link>
       </div>
 
+      <Suspense>
+        <ExpenseFilters />
+      </Suspense>
+
       {expenses.length === 0 ? (
         <div className="text-center py-16 px-6 border-2 border-dashed border-slate-200 rounded-xl">
           <div className="text-4xl mb-3">📋</div>
-          <p className="text-slate-600 font-medium">No expenses yet.</p>
+          <p className="text-slate-600 font-medium">No expenses found.</p>
           <p className="text-slate-400 text-sm mt-1">
-            Scan a receipt or add manually to get started.
+            Try adjusting your filters or add a new expense.
           </p>
         </div>
       ) : (
