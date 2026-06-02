@@ -42,21 +42,23 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Feature summary */}
+      {/* How it works */}
       <div className="px-6 pb-24 md:pb-8">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-4 text-center">
-          <div className="p-3 rounded-xl bg-slate-50">
-            <div className="text-2xl">📷</div>
-            <div className="mt-1 text-xs text-slate-600 font-medium">Scan receipts</div>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50">
-            <div className="text-2xl">📋</div>
-            <div className="mt-1 text-xs text-slate-600 font-medium">Track expenses</div>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50">
-            <div className="text-2xl">📊</div>
-            <div className="mt-1 text-xs text-slate-600 font-medium">Export CSV</div>
-          </div>
+        <div className="max-w-sm mx-auto">
+          <p className="text-xs text-slate-400 uppercase tracking-wider font-medium text-center mb-4">How it works</p>
+          <ol className="space-y-3">
+            {[
+              { icon: '📷', text: 'Scan a receipt or add an expense manually.' },
+              { icon: '🤖', text: 'AI reads the merchant, date, and amount for you.' },
+              { icon: '✅', text: 'Review the results and save.' },
+              { icon: '📋', text: 'Find it any time in your expense list — filter, search, or export.' },
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3">
+                <span className="text-lg leading-none mt-0.5">{step.icon}</span>
+                <span className="text-sm text-slate-600">{step.text}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </div>
