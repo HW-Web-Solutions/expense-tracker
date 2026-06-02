@@ -154,6 +154,12 @@ export default function ScanPage() {
   const r = state.result
   const isSaving = state.step === 'saving'
 
+  const unknownMerchant = r.merchant === 'Unknown'
+  const missingDate = !r.expense_date
+  const zeroAmount = r.amount === 0
+  const warn = 'border-amber-300 bg-amber-50'
+  const normal = 'border-slate-200'
+
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -181,14 +187,16 @@ export default function ScanPage() {
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Merchant <span className="text-red-500">*</span></label>
           <input type="text" name="merchant" defaultValue={r.merchant} required
-            className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className={`w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${unknownMerchant ? warn : normal}`} />
+          {unknownMerchant && <p className="mt-1 text-xs text-amber-600">Merchant not detected — please enter.</p>}
         </div>
 
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Amount <span className="text-red-500">*</span></label>
             <input type="number" name="amount" defaultValue={r.amount} min="0" step="0.01" required
-              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className={`w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${zeroAmount ? warn : normal}`} />
+            {zeroAmount && <p className="mt-1 text-xs text-amber-600">Please confirm the final paid amount.</p>}
           </div>
           <div className="w-32">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Currency <span className="text-red-500">*</span></label>
@@ -203,7 +211,8 @@ export default function ScanPage() {
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Date <span className="text-red-500">*</span></label>
             <input type="date" name="expense_date" defaultValue={r.expense_date ?? ''} required
-              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className={`w-full px-3 py-2.5 rounded-lg border text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${missingDate ? warn : normal}`} />
+            {missingDate && <p className="mt-1 text-xs text-amber-600">Date not found on receipt — please enter.</p>}
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Time <span className="text-slate-400 font-normal">(optional)</span></label>
