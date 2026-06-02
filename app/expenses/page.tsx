@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { getExpenses } from '@/lib/db/expenses'
 import type { Expense } from '@/lib/types'
 import ExpenseFilters from '@/app/components/ExpenseFilters'
+import { SuccessBanner } from '@/app/components/SuccessBanner'
 
 export default async function ExpensesPage({
   searchParams,
@@ -11,6 +12,7 @@ export default async function ExpensesPage({
 }) {
   const params = await searchParams
   const str = (v: unknown) => (typeof v === 'string' ? v : undefined)
+  const successSaved = params.success === 'saved'
 
   const filters = {
     search: str(params.search),
@@ -29,6 +31,8 @@ export default async function ExpensesPage({
 
   return (
     <div className="px-4 py-6 max-w-3xl mx-auto">
+      {successSaved && <SuccessBanner message="Expense saved successfully." />}
+
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-bold text-slate-900">Expenses</h1>
         <a
