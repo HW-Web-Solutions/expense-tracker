@@ -135,7 +135,7 @@ export default function EditExpensePage() {
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Receipt Image <span className="text-slate-400 font-normal">(optional)</span>
           </label>
-          <ReceiptUpload name="receipt" defaultImageUrl={receiptUrl ?? undefined} />
+          <ReceiptUpload name="receipt" defaultImageUrl={receiptUrl ?? undefined} removeFieldName="remove_receipt" />
         </div>
 
         <button
